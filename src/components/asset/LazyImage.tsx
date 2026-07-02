@@ -36,6 +36,10 @@ export const LazyImage: FC<LazyImage> = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const intersectRef = useRef<HTMLDivElement>(null);
+  // Keep the latest `loading` readable inside the observer callback without
+  // making it a dependency (which would rebuild the observer on every load).
+  const loadingRef = useRef(loading);
+  loadingRef.current = loading;
 
   const imgRefCb = useCallback((img: HTMLImageElement | HTMLVideoElement | null) => {
     if (!img) return;
@@ -81,7 +85,7 @@ export const LazyImage: FC<LazyImage> = ({
           if (!unloadWhenOutside) {
             observer.unobserve(entry.target);
           }
-        } else if (unloadWhenOutside && !loading && entry.intersectionRatio === 0) {
+        } else if (unloadWhenOutside && !loadingRef.current && entry.intersectionRatio === 0) {
           /* If completely out of view and already loaded, reset state.
              images/videos should be cached by CEF so when back to view they will load instantly */
           setInViewport(false);
@@ -94,7 +98,7 @@ export const LazyImage: FC<LazyImage> = ({
     return () => {
       observer.disconnect();
     };
-  }, [loading, marginOffset, unloadWhenOutside, scrollContainer, src]);
+  }, [marginOffset, unloadWhenOutside, scrollContainer, src]);
 
   return (
     <div

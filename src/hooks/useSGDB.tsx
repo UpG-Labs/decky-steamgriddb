@@ -157,13 +157,16 @@ export const SGDBProvider: FC<{ children: ReactNode }> = ({ children }) => {
 
   const apiRequest = useCallback((url: string, signal?: AbortSignal): Promise<any[]> => {
     return new Promise((resolve, reject) => {
-      if (signal?.aborted) return reject(new DOMException('Aborted', 'AbortError'));
-
       const abortHandler = () => {
         reject(new DOMException('Aborted', 'AbortError'));
       };
-
       signal?.addEventListener('abort', abortHandler);
+
+      if (signal?.aborted) {
+        signal?.removeEventListener('abort', abortHandler);
+        return reject(new DOMException('Aborted', 'AbortError'));
+      }
+
       fetchNoCors(`${SGDB_API_BASE}${url}`, {
         method: 'GET',
         headers: {
@@ -172,23 +175,21 @@ export const SGDBProvider: FC<{ children: ReactNode }> = ({ children }) => {
         },
       }).then((res) => {
         log(res);
-        if (res.status !== 200 && res.status >= 500) {
+        if (res.status >= 500) {
           return reject(new Error('SGDB API request failed'));
         }
 
-        try {
-          res.json().then((assetRes) => {
-            if (!assetRes.success) {
-              const apiErr = new Error(assetRes.errors.join(', '));
-              (apiErr as any).status = res.status;
-              return reject(apiErr);
-            }
-            return resolve(assetRes.data);
-          });
-        } catch (err: any) {
-          return reject(new Error(err.message));
-        }
-      }).finally(() => {
+        return res.json().then((assetRes) => {
+          if (!assetRes.success) {
+            const apiErr = new Error(assetRes.errors?.join(', ') || 'SGDB API request failed');
+            (apiErr as any).status = res.status;
+            return reject(apiErr);
+          }
+          return resolve(assetRes.data);
+        });
+      // Without this catch a network error or malformed JSON body would leave
+      // the promise unsettled forever, hanging any await on apiRequest.
+      }).catch(reject).finally(() => {
         signal?.removeEventListener('abort', abortHandler);
       });
     });

@@ -204,7 +204,7 @@ export const AssetSearchContext: FC<{ children: ReactNode }> = ({ children }) =>
     if (!selectedGame) return;
     (async () => {
       const sgdbGame = await getSgdbGame(selectedGame);
-      setExternalSgdbData(sgdbGame.external_platform_data);
+      setExternalSgdbData(sgdbGame?.external_platform_data);
     })();
   }, [getSgdbGame, selectedGame]);
 

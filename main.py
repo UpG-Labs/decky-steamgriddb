@@ -68,7 +68,8 @@ class Plugin:
                         f.write(res.read())
                     return str(Path(output_dir) / file_name)
                 return False
-        except:
+        except Exception as e:
+            decky.logger.error("download_file failed for %s: %s" % (url, e))
             return False
 
         return False
@@ -93,7 +94,8 @@ class Plugin:
     async def set_shortcut_icon(self, appid, owner_id, path=None):
         shortcuts_vdf = get_userdata_config(owner_id) / 'shortcuts.vdf'
 
-        d = binary_load(open(shortcuts_vdf, "rb"))
+        with open(shortcuts_vdf, "rb") as f:
+            d = binary_load(f)
         for shortcut in d['shortcuts'].values():
             shortcut_appid = (shortcut['appid'] & 0xffffffff) | 0x80000000
             if shortcut_appid == appid:
@@ -105,7 +107,8 @@ class Plugin:
                     shortcut['icon'] = ''
                 else:
                     shortcut['icon'] = path
-                binary_dump(d, open(shortcuts_vdf, 'wb'))
+                with open(shortcuts_vdf, 'wb') as f:
+                    binary_dump(d, f)
                 return True
         raise Exception('Could not find shortcut to edit')
 
