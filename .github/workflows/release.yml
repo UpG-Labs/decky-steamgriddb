@@ -20,6 +20,9 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          ref: main
 
       - name: Setup Node
         uses: actions/setup-node@v3
@@ -62,7 +65,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-          ref: release
+          ref: main
 
       - name: Setup Node
         uses: actions/setup-node@v3
@@ -176,7 +179,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-          ref: release
+          ref: main
           
       - name: Publish Release
         id: publish-release
