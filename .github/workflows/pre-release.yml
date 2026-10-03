@@ -4,12 +4,13 @@ on:
   push:
     branches:
       - "pre-release"
+  workflow_dispatch:
 
 jobs:
   create-release:
     permissions:
       contents: write
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     outputs:
       release_id: ${{ steps.create-release.outputs.result }}
       tag: ${{ steps.create-release.outputs.tag }}
@@ -52,7 +53,7 @@ jobs:
     needs: create-release
     permissions:
       contents: write
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout Repository
@@ -153,7 +154,7 @@ jobs:
             }
 
             // * zip
-            child_process.execSync("pnpm i zip-a-folder");
+            child_process.execSync("pnpm i zip-a-folder@3.1.9");
             const { zip, COMPRESSION_LEVEL } = require('zip-a-folder');
 
             const outputZipPath = path.join(cwdPath, "bundle.zip");
@@ -166,7 +167,7 @@ jobs:
     needs: [create-release, build-plugin]
     permissions:
       contents: write
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout Repository
